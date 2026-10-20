@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block style %}
+<link href="{{url_for('static', filename='css/form.css')}}" rel="stylesheet" />
+{% endblock %}
+
+
+{% block content %}
+
+<div class="form-container">
+  <form
+    class="form"
+    action="{{url_for('main.login')}}"
+    id="login-form"
+    method="POST"
+  >
+    <h2 class="form-header">Log In</h2>
+    <div class="username-container">
+      <label for="username" class="form-label">Username: </label>
+      <input
+        type="text"
+        id="username"
+        name="username"
+        placeholder="Moshiko"
+        class="form-input"
+        required
+      />
+    </div>
+
+    <div class="password-container">
+      <label for="password" class="form-label">Password: </label>
+      <input
+        type="password"
+        class="form-input"
+        id="password"
+        name="password"
+        required
+      />
+    </div>
+
+    <div class="submit-container">
+      <button class="btn btn-primary" type="submit">Log in</button>
+    </div>
+  </form>
+</div>
+
+{% endblock %}

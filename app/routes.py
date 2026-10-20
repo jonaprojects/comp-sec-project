@@ -1,11 +1,11 @@
-from flask import render_template, redirect, url_for, Blueprint, request, abort, flash
-from flask_sqlalchemy import SQLAlchemy
-from config import Config
+from flask import Blueprint, abort, flash, redirect, render_template, request, url_for
 from werkzeug.exceptions import BadRequestKeyError
 
-from .validators import is_valid_username, is_valid_email, is_valid_password
+from config import Config
+
 from . import db
 from .models import User
+from .validators import is_valid_email, is_valid_password, is_valid_username
 
 main = Blueprint("main", __name__)
 
