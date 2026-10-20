@@ -1,0 +1,27 @@
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/navbar.css') }}"
+/>
+
+<nav class="">
+  <div class="nav-container">
+    <div class="nav-logo-box">
+      <img
+        class="nav-logo"
+        src="{{ url_for('static', filename='assets/logo.svg') }}"
+        alt="Logo"
+      />
+    </div>
+    <ul class="nav-items">
+      <a class="nav-link" href="{{url_for('main.about')}}"> About </a>
+      <a class="nav-link" href="{{url_for('main.home')}}"> Home </a>
+      <a class="nav-link" href="{{url_for('main.contact')}}"> Contact Us </a>
+    </ul>
+    <ul class="nav-buttons">
+      <a class="btn btn-primary" href="{{url_for('main.login')}}">Log in</a>
+      <a class="btn btn-secondary" href="{{url_for('main.register')}}"
+        >Register</a
+      >
+    </ul>
+  </div>
+</nav>

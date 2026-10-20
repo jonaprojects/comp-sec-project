@@ -1,0 +1,63 @@
+{% extends 'base.html' %} {% block style %}
+<link
+  href="{{url_for('static', filename='css/register.css')}}"
+  rel="stylesheet"
+/>
+<link href="{{url_for('static', filename='css/form.css')}}" rel="stylesheet" />
+{% endblock %} {% block content %}
+<div class="form-container">
+  <form
+    class="form"
+    action="{{url_for('main.register')}}"
+    id="register-form"
+    method="POST"
+  >
+    <h2 class="form-header">Register</h2>
+    <div class="username-container">
+      <label for="username" class="form-label">Username: </label>
+      <input
+        type="text"
+        id="username"
+        name="username"
+        placeholder="Moshiko"
+        class="form-input"
+        required
+      />
+    </div>
+
+    <div class="email-container">
+      <label for="email" class="form-label">Email: </label>
+      <input
+        type="email"
+        class="form-input"
+        id="email"
+        name="email"
+        placeholder="moshiko@gmail.com"
+        required
+      />
+    </div>
+
+    <div class="password-container">
+      <label for="password" class="form-label">Password: </label>
+      <input
+        type="password"
+        class="form-input"
+        id="password"
+        name="password"
+        required
+      />
+    </div>
+
+    <div class="submit-container">
+      <button class="btn btn-primary" type="submit">Register</button>
+    </div>
+  </form>
+</div>
+
+{% endblock %} {% block script %}
+<script>
+  window.validationRules = {{ validation_rules | tojson }};
+</script>
+<script src="{{url_for('static', filename='js/register.js')}}"></script>
+<script src="{{url_for('static', filename='js/validators.js')}}"></script>
+{% endblock %}

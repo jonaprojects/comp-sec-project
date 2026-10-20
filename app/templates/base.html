@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}Communications LTD{% endblock %}</title>
+    {% block style %} {% endblock %}
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/globals.css') }}"
+    />
+  </head>
+  <body>
+    <div class="page-container">
+      {% include "components/navbar.html" %}
+
+      <main class="page-content">{% block content %} {% endblock %}</main>
+
+      {% include "components/footer.html" %}
+    </div>
+
+    {% block script %}
+
+    {% endblock %}
+  </body>
+</html>

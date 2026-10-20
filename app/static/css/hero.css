@@ -1,0 +1,38 @@
+.container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+}
+
+.content-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 64px;
+    max-width: 650px;
+}
+
+.hero-title {
+    font-size: 72px;
+    margin-top: 0;
+    margin-bottom: 0;
+    font-weight:600;
+}
+
+.hero-secondary {
+    color: #3b3b3b;
+}
+
+.buttons-container {
+ display: flex;
+ flex-direction: row;
+ gap: 16px;
+}
+
+.demo-container {
+
+}
+.demo-asset {
+    height: 100vh;
+    width: auto;
+}
