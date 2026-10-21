@@ -7,7 +7,7 @@ load_dotenv()
 class Config:
     SQLALCHEMY_DATABASE_URI = os.environ["DATABASE_URL"]
     HMAC_SECRET_KEY = os.environ["HMAC_SECRET_KEY"]
-
+    SECRET_KEY = os.environ["FLASK_SECRET_KEY"]  # Important: Flask expect these names
     # Password Configurations
     PASSWORD_MIN_LENGTH = 10
     PASSWORD_REQUIRE_UPPERCASE = True
@@ -16,7 +16,7 @@ class Config:
     PASSWORD_REQUIRE_SPECIAL = True
 
     @classmethod
-    def get_validation_dict(cls)->dict:
+    def get_validation_dict(cls) -> dict:
         return {
             "password_min_length": cls.PASSWORD_MIN_LENGTH,
             "password_require_lowercase": cls.PASSWORD_REQUIRE_LOWERCASE,

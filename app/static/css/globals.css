@@ -55,6 +55,11 @@ body {
     width: 100%;
 }
 
+.error-label {
+    color: red;
+    font-size: 14px;
+}
+
 .page-content {
     flex: 1;
     display: flex;

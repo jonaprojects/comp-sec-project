@@ -14,4 +14,5 @@ form.addEventListener("submit", (event) => {
     event.preventDefault();
     alert("Invalid registeration details!");
   }
+  return true;
 });

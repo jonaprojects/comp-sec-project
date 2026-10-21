@@ -18,10 +18,20 @@
       <a class="nav-link" href="{{url_for('main.contact')}}"> Contact Us </a>
     </ul>
     <ul class="nav-buttons">
-      <a class="btn btn-primary" href="{{url_for('main.login')}}">Log in</a>
-      <a class="btn btn-secondary" href="{{url_for('main.register')}}"
-        >Register</a
-      >
+      {% if user %}
+      <form action="{{ url_for('main.logout') }}" method="POST">
+          <button type="submit" class="btn btn-secondary">
+              Log Out
+          </button>
+      </form>        <a class="btn btn-primary" href="{{url_for('main.profile')}}"
+          >Profile</a>
+             
+      {% else %}
+        <a class="btn btn-secondary" href="{{url_for('main.register')}}">Register</a>
+        <a class="btn btn-primary" href="{{url_for('main.login')}}">Log in</a>
+
+      
+      {% endif %}
     </ul>
   </div>
 </nav>

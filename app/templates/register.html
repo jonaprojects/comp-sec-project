@@ -23,6 +23,9 @@
         class="form-input"
         required
       />
+       {% if errors and errors.get("username") %}
+        <p class="error-label">{{errors["username"]}}</p>
+      {% endif %}
     </div>
 
     <div class="email-container">
@@ -35,6 +38,9 @@
         placeholder="moshiko@gmail.com"
         required
       />
+       {% if errors and errors.get("email") %}
+        <p class="error-label">{{errors["email"]}}</p>
+      {% endif %}
     </div>
 
     <div class="password-container">
@@ -46,6 +52,9 @@
         name="password"
         required
       />
+      {% if errors and errors.get("password") %}
+        <p class="error-label">{{errors["password"]}}</p>
+      {% endif %}
     </div>
 
     <div class="submit-container">
@@ -57,6 +66,7 @@
 {% endblock %} {% block script %}
 <script>
   window.validationRules = {{ validation_rules | tojson }};
+  window.errors = {{ errors | tojson }};
 </script>
 <script src="{{url_for('static', filename='js/register.js')}}"></script>
 <script src="{{url_for('static', filename='js/validators.js')}}"></script>
