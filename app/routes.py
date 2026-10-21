@@ -1,16 +1,17 @@
+from functools import wraps
+
 from flask import (
     Blueprint,
     abort,
     flash,
+    g,
     redirect,
     render_template,
     request,
-    url_for,
     session,
-    g,
+    url_for,
 )
 from werkzeug.exceptions import BadRequestKeyError
-from functools import wraps
 
 from config import Config
 
@@ -19,6 +20,7 @@ from .models import User
 from .validators import is_valid_email, is_valid_password, is_valid_username
 
 main = Blueprint("main", __name__)
+METHOD_NOT_ALLOWED = 405
 
 
 @main.before_request
@@ -120,7 +122,7 @@ def register():
                 user=g.user,
             ), 400
     else:
-        return abort(405)  # Invalid method type - manually handling it
+        return abort(METHOD_NOT_ALLOWED)  # Invalid method type - manually handling it
 
 
 @main.route("/login", methods=["GET", "POST"])
@@ -164,7 +166,7 @@ def login():
         session["user_id"] = user.id
         return redirect(url_for("main.home"))
     else:
-        return abort(405)
+        return abort(METHOD_NOT_ALLOWED)
 
 
 @main.route("/logout", methods=["POST"])
@@ -183,7 +185,47 @@ def login_required(f):
 
     return decorated
 
-@login_required 
-@main.route('/profile')
+
+@login_required
+@main.route("/profile")
 def profile():
-    return render_template('profile.html', user=g.user)
+    return render_template("profile.html", user=g.user)
+
+@main.route("/change-password", methods=["GET", "POST"])
+@login_required
+def change_password():
+    errors = {}
+    if request.method == "GET":
+        return render_template("change_password.html", user=g.user, errors=errors)
+    elif request.method == "POST":
+        current_password = request.form.get("current_password")
+        new_password = request.form.get("new_password")
+
+        # sanity checks
+        if not current_password or not new_password:
+            errors["message"] = "Invalid Request. Try Again."
+            return render_template("change_password.html", user=g.user, errors=errors)
+
+        # validate that the password is correct
+        if not g.user.check_password(current_password):
+            errors["message"] = "Incorrect Data. Try Again."
+            return render_template("change_password.html", user=g.user, errors=errors)
+
+        # Check whether the new password follows our rules
+        if not is_valid_password(new_password):
+            errors['message'] = 'Your password is too weak.'
+            return render_template("change_password.html", user=g.user, errors=errors)
+
+        if g.user.check_password(new_password):
+            # If new password = old password 
+            errors['message'] = 'You cannot re-use the same password.'
+            return render_template("change_password.html", user=g.user, errors=errors)
+
+        # update the password
+        g.user.set_password(new_password)
+        db.session.commit()
+        flash("Password changed successfully!", "success")
+        return redirect(url_for('main.change_password')) 
+    
+    else:
+        abort(METHOD_NOT_ALLOWED)

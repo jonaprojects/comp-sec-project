@@ -2,7 +2,14 @@
 
 
 {% block content %}
-
-<h1>Welcome home, {{user.username}}</h1>
+<div>
+<h1>Your Profile</h1>
+<p>Username: <span>{{user.username}}</span></p>
+<p>Email:  <span>{{user.email}}</span></p>
+<!-- If we add email verification, add a verification button.-->
+<a href="{{url_for('main.change_password')}}" class="btn btn-primary">
+    Change Password
+</a>
+</div>
 
 {% endblock %}
