@@ -8,6 +8,7 @@ class Config:
     SQLALCHEMY_DATABASE_URI = os.environ["DATABASE_URL"]
     HMAC_SECRET_KEY = os.environ["HMAC_SECRET_KEY"]
     SECRET_KEY = os.environ["FLASK_SECRET_KEY"]  # Important: Flask expect these names
+    RESET_CODE_HMAC_KEY = os.environ["RESET_CODE_HMAC_KEY"]
     # Password Configurations
     PASSWORD_MIN_LENGTH = 10
     PASSWORD_REQUIRE_UPPERCASE = True

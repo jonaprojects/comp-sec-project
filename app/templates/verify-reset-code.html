@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block style %}
+<link href="{{url_for('static', filename='css/form.css')}}" rel="stylesheet" />
+{% endblock %}
+
+{% block content %}
+
+<div class="form-container">
+    <div class="content-container">
+        <h2  style="text-align: center">Verification</h2>
+        <form action="{{url_for('main.verify_reset_code')}}" 
+            method="POST" class="form">
+        
+            <div class="field-container" >
+                <label for="reset-code" class="form-label">Enter the reset code</label>
+                <input type="text" id="reset-code" name="reset-code" class="form-input" />
+            
+            {% if errors and errors['message'] %}
+                <p class="error-label">{{errors['message']}}</p>
+            {% endif %}
+
+            </div>
+            
+            <button type="submit" class="btn btn-primary">Verify Reset Code </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

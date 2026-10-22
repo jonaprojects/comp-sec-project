@@ -24,7 +24,7 @@
                         <th class="table-head-col">Country</td>
                     </tr>
                 {% for client in clients %}
-                    <tr class="table-row {% if loop.index0 % 2 == 0 %}table-row-gray{% else %}table-row-white{% endif %}">                        <td class="table-col">
+                    <tr class="table-row {% if loop.index % 2 == 0 %}table-row-gray{% else %}table-row-white{% endif %}">                        <td class="table-col">
                             {{client.name}}
                         </td>
                          <td class="table-col">
