@@ -51,7 +51,7 @@ def home():
 
 @main.route("/about")
 def about():
-    return "<h1>This page is under development</h1>"
+    return render_template("about.html", user=g.user)
 
 
 @main.route("/contact")

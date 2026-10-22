@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block style %}
+<link href="{{url_for('static', filename='css/about.css')}}" rel="stylesheet" />
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="content-container">
+    <h1>About Us</h1>
+    <h3>About Communication LTD</h3>
+    <p>
+      <strong
+        >At Communication LTD, we connect businesses to what matters most: their
+        customers, their teams, and their future.</strong
+      >
+      In a fast-paced digital world, static connectivity isn’t enough. We
+      design, deploy, and manage agile
+      <strong>telecommunication systems and unified networks</strong> that
+      ensure your business never misses a beat, a call, or an opportunity.
+    </p>
+
+    <h3>Bridging the Gap in Business Connectivity</h3>
+    <p>
+      We started with a simple realization: while technology continuously
+      evolves, business communication often gets unnecessarily complex. Many
+      organizations struggle with fragmented systems, dropped calls, and slow
+      support.
+      <strong
+        >Communication LTD was founded to eliminate those friction
+        points.</strong
+      >
+      We act as your single, trusted technology partner, integrating voice,
+      data, cloud solutions, and secure networking into one seamless ecosystem
+      tailored to your operational scale.
+    </p>
+
+    <h3>Driven by Your Growth</h3>
+    <p>
+      We believe our success is entirely tied to yours. We don't just sell
+      software or hardware; we build the foundational infrastructure that drives
+      collaboration and customer satisfaction. By combining
+      <strong>enterprise-grade infrastructure</strong> with a deeply
+      personalized, human approach to IT support, we empower teams to work
+      securely from anywhere in the world.
+    </p>
+
+    <h3>Our Core Commitments</h3>
+    <p>
+      Our approach is built on relentless reliability, future-proof innovation,
+      and radical clarity. Communication is your business lifeline; we maintain
+      maximum uptime and proactive monitoring so you are always online. We
+      continuously update our suite of cloud and telecom technologies so your
+      business remains competitive. Best of all, we promise no technical jargon,
+      hidden fees, or convoluted contracts—just transparent service and
+      straightforward solutions.
+    </p>
+  </div>
+
+  <div class="img-container">
+        <img 
+            src="{{url_for('static', filename='assets/about.png')}}"
+            alt="About Image"
+            class="about-img"
+        />
+  </div>
+</div>
+{% endblock %}
