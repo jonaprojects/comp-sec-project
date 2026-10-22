@@ -3,11 +3,14 @@ Validate user input according to the project's requirements and best practices.
 """
 
 import re
+
 from config import Config
 
 EMAIL_REGEX = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
 EMAIL_PATTERN = re.compile(EMAIL_REGEX)
 
+PHONE_REGEX = r"^\+?[0-9]{7,15}$"
+PHONE_PATTERN = re.compile(PHONE_REGEX)
 
 def is_valid_username(username: str) -> bool:
     return len(username) > 0
@@ -15,6 +18,8 @@ def is_valid_username(username: str) -> bool:
 def is_valid_email(email: str) -> bool:
     return bool(EMAIL_PATTERN.match(email))
 
+def is_valid_phone(phone: str):
+    return bool(PHONE_PATTERN.match(phone))
 
 def is_valid_password(password: str) -> bool:
     if len(password) < Config.PASSWORD_MIN_LENGTH:

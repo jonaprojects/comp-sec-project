@@ -15,7 +15,10 @@
     <ul class="nav-items">
       <a class="nav-link" href="{{url_for('main.about')}}"> About </a>
       <a class="nav-link" href="{{url_for('main.home')}}"> Home </a>
-      <a class="nav-link" href="{{url_for('main.contact')}}"> Contact Us </a>
+      <a class="nav-link" href="{{url_for('main.contact')}}"> Contact Us</a>
+      {% if user %}
+        <a class="nav-link" href="{{url_for('main.clients')}}"> Clients</a>
+      {% endif %}
     </ul>
     <ul class="nav-buttons">
       {% if user %}

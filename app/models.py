@@ -45,3 +45,14 @@ class User(db.Model):
 
         # 3. Compare safely (not with ==, that's vulnerable to timing attacks)
         return hmac.compare_digest(hash_result, self.hashed_password)
+
+
+class Client(db.Model):
+    """ Our business handle clients. This is different from the user."""
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(64), nullable=False)
+    email = db.Column(db.String(128), unique=True, nullable=False)
+
+    # Optional properties 
+    phone = db.Column(db.String(20), nullable=True) 
+    country = db.Column(db.String(64), nullable=True )

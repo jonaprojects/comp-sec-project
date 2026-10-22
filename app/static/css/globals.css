@@ -17,7 +17,7 @@ body {
 }
 
 .btn {
- display: inline-block;
+    display: inline-block;
     background: none;
     border: none;
     font: inherit; 

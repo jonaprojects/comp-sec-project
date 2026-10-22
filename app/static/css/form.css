@@ -28,6 +28,9 @@
     width: 100%;
 }
 
+.field-container {
+    width: 100%;
+}
 
 .form-label {
     display: block;

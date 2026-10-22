@@ -16,8 +16,13 @@ from werkzeug.exceptions import BadRequestKeyError
 from config import Config
 
 from . import db
-from .models import User
-from .validators import is_valid_email, is_valid_password, is_valid_username
+from .models import User, Client
+from .validators import (
+    is_valid_email,
+    is_valid_password,
+    is_valid_username,
+    is_valid_phone,
+)
 
 main = Blueprint("main", __name__)
 METHOD_NOT_ALLOWED = 405
@@ -191,6 +196,7 @@ def login_required(f):
 def profile():
     return render_template("profile.html", user=g.user)
 
+
 @main.route("/change-password", methods=["GET", "POST"])
 @login_required
 def change_password():
@@ -213,19 +219,60 @@ def change_password():
 
         # Check whether the new password follows our rules
         if not is_valid_password(new_password):
-            errors['message'] = 'Your password is too weak.'
+            errors["message"] = "Your password is too weak."
             return render_template("change_password.html", user=g.user, errors=errors)
 
         if g.user.check_password(new_password):
-            # If new password = old password 
-            errors['message'] = 'You cannot re-use the same password.'
+            # If new password = old password
+            errors["message"] = "You cannot re-use the same password."
             return render_template("change_password.html", user=g.user, errors=errors)
 
         # update the password
         g.user.set_password(new_password)
         db.session.commit()
         flash("Password changed successfully!", "success")
-        return redirect(url_for('main.change_password')) 
-    
+        return redirect(url_for("main.change_password"))
+
+    else:
+        abort(METHOD_NOT_ALLOWED)
+
+
+@main.route("/clients", methods=["GET"])
+@login_required
+def clients():
+    query = db.select(Client)
+    clients = db.session.scalars(query).all()
+    return render_template("clients.html", user=g.user, clients=clients)
+
+
+@main.route("/add-client", methods=["GET", "POST"])
+@login_required
+def add_client():
+    errors = {}
+    if request.method == "GET":
+        return render_template("add_client.html", user=g.user, errors=errors)
+    elif request.method == "POST":
+        name = request.form.get("name")
+        email = request.form.get("email")
+        phone = request.form.get("phone")
+        country = request.form.get("country")
+
+        if not name or not email:
+            errors["message"] = "Invalid Request."
+            return render_template("add_client.html", user=g.user, errors=errors)
+
+        if not is_valid_email(email):
+            errors["email"] = "Invalid Email."
+            return render_template("add_client.html", user=g.user, errors=errors)
+
+        if phone and not is_valid_phone(phone):
+            errors["phone"] = "Invalid Phone Number"
+            return render_template("add_client.html", user=g.user, errors=errors)
+
+        new_client = Client(name=name, email=email, phone=phone, country=country)
+        db.session.add(new_client)
+        db.session.commit()
+        flash("Client Added successfully", "success")
+        return redirect(url_for("main.clients"))
     else:
         abort(METHOD_NOT_ALLOWED)

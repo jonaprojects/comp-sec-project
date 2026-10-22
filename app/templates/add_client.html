@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+
+{% block style %}
+<link href="{{url_for('static', filename='css/form.css')}}" rel="stylesheet" />
+{% endblock %}
+
+{% block content %}
+    <div class="form-container" style="margin-block-end: 16px;">
+        <form class="form" action="{{url_for('main.add_client')}}" method="POST">
+            <div class="header-container">
+                <h2 class="form-header">Add a New Client</h2>
+            </div>
+            <div class="field-container">
+                <label class="form-label" for="name">
+                    Name: 
+                </label>
+                <input class="form-input" id="name" name="name" type="text" required />
+            </div>
+            <div class="field-container">
+                <label class="form-label" for="E-mail">
+                    Email: 
+                </label>
+                <input class="form-input" id="email" name="email" type="email" required />
+            </div>
+            <div class="field-container">
+                <label class="form-label" for="country">
+                    Country: 
+                </label>
+                <input class="form-input" id="country" name="country" type="text" />
+            </div>
+             <div class="field-container">
+                <label class="form-label" for="phone">
+                    Phone: 
+                </label>
+                <input class="form-input" id="phone" name="phone" type="tel" />
+            </div>
+            <div class="submit-container">
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </div>
+        </form>
+    </div>
+{% endblock %}

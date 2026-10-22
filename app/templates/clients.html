@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block style %}
+<link href="{{url_for('static', filename='css/clients.css')}}" rel="stylesheet" />
+{% endblock %}
+
+
+{% block content %}
+<div class="container">
+    <div class="content-container">
+        {% if clients %}
+           <div class="header-toolkit">
+                <h2>List of Clients</h2>  
+            <a href="{{url_for('main.add_client')}}" class="btn btn-primary">
+                Add Client
+            </a>           
+           </div>
+            <div class="table-container">
+                <table class="table">
+                    <tr class="table-head">
+                        <th class="table-head-col">Name</td>
+                        <th class="table-head-col">Email</td>
+                        <th class="table-head-col">Phone</td>
+                        <th class="table-head-col">Country</td>
+                    </tr>
+                {% for client in clients %}
+                    <tr class="table-row {% if loop.index0 % 2 == 0 %}table-row-gray{% else %}table-row-white{% endif %}">                        <td class="table-col">
+                            {{client.name}}
+                        </td>
+                         <td class="table-col">
+                            {{client.email}}
+                        </td>
+                         <td class="table-col">
+                            {{client.phone}}
+                        </td>
+                         <td class="table-col">
+                            {{client.country}}
+                        </td>
+                    </tr>
+                {% endfor %}
+                </table>
+            </div>
+        {% else %}
+            <div>
+                <h1>No clients exist in the system yet.</h1>
+            <a href="{{url_for('main.add_client')}}" class="btn btn-primary">
+                Add Client
+            </a> 
+            </div>
+    </div>
+
+    {% endif %}
+</div>
+{% endblock %}
