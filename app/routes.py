@@ -17,14 +17,15 @@ from werkzeug.exceptions import BadRequestKeyError
 from config import Config
 
 from . import db
-from .models import Client, User
+from .models import Client, User, PasswordHistory
 from .utils.email_service import mask_email, send_reset_code
-from .utils.reset_password_service import generate_reset_code
+from .utils.reset_password_service import generate_reset_code, update_password
 from .validators import (
     is_valid_email,
     is_valid_password,
     is_valid_phone,
     is_valid_username,
+    in_password_history,
 )
 
 main = Blueprint("main", __name__)
@@ -195,8 +196,8 @@ def login_required(f):
     return decorated
 
 
-@login_required
 @main.route("/profile")
+@login_required
 def profile():
     return render_template("profile.html", user=g.user)
 
@@ -226,14 +227,14 @@ def change_password():
             errors["message"] = "Your password is too weak."
             return render_template("change_password.html", user=g.user, errors=errors)
 
-        if g.user.check_password(new_password):
-            # If new password = old password
-            errors["message"] = "You cannot re-use the same password."
+        if in_password_history(g.user, new_password):
+            errors["password"] = (
+                "You already used this password in the past. Please choose a new password."
+            )
             return render_template("change_password.html", user=g.user, errors=errors)
 
-        # update the password
-        g.user.set_password(new_password)
-        db.session.commit()
+        # success 
+        update_password(g.user, new_password)
         flash("Password changed successfully!", "success")
         return redirect(url_for("main.change_password"))
 
@@ -283,63 +284,86 @@ def add_client():
 
 
 @main.route("/forgot-password", methods=["GET", "POST"])
-@login_required
 def forgot_password():
-    masked_email = mask_email(g.user.email)
+    errors = {}
+
     if request.method == "GET":
-        return render_template(
-            "forgot_password.html", user=g.user, masked_email=masked_email
-        )
+        return render_template("forgot-password.html", errors=errors)
+
     elif request.method == "POST":
-        # Invalidate previous reset authorization
+        username = (request.form.get("username") or "").strip()
+
+        if not username:
+            errors["username"] = "Please enter your username."
+            return render_template("forgot-password.html", errors=errors)
+
+        # Find the user
+        user = db.session.scalar(db.select(User).where(User.username == username))
+
+        # Clear any previous reset flow in this browser
+        session.pop("pending_reset_user_id", None)
         session.pop("reset_verified_user_id", None)
         session.pop("reset_verified_at", None)
 
-        # generate reset code
+        if user is None:
+            errors["username"] = "Invalid username."
+            return render_template("forgot-password.html", errors=errors)
+
         reset_code = generate_reset_code()
 
-        # send to client email
-        send_reset_code(g.user.email, reset_code)
-
-        # hash, salt, and save in the db
-        g.user.set_reset_code(reset_code)
-        db.session.add(g.user)
+        user.set_reset_code(reset_code)
         db.session.commit()
-        flash('A Reset code was sent to your E-mail.', 'success')
+
+        send_reset_code(user.email, reset_code)
+
+        # Remember which account is being recovered
+        session["pending_reset_user_id"] = user.id
+
         return redirect(url_for("main.verify_reset_code"))
     else:
         abort(METHOD_NOT_ALLOWED)
 
 
 @main.route("/verify-reset-code", methods=["GET", "POST"])
-@login_required
 def verify_reset_code():
     errors = {}
 
+    user_id = session.get("pending_reset_user_id")
+
+    if user_id is None:
+        flash("Something went wrong", "failure")
+        return render_template("home.html")
+
+    user = db.session.get(User, user_id)
+
+    if user is None:
+        flash("Something went wrong", "failure")
+        return render_template("home.html")
+
     if request.method == "GET":
-        return render_template("verify-reset-code.html", user=g.user, errors=errors)
+        return render_template("verify-reset-code.html", user=user, errors=errors)
 
     elif request.method == "POST":
         reset_code = request.form.get("reset-code")
 
         if not reset_code:
             errors["message"] = "Invalid Reset Code. Try Again."
-            return render_template("verify-reset-code.html", user=g.user, errors=errors)
+            return render_template("verify-reset-code.html", user=user, errors=errors)
 
-        is_valid_code = g.user.check_reset_code(reset_code)
+        is_valid_code = user.check_reset_code(reset_code)
 
         if not is_valid_code:
             errors["message"] = "Incorrect Reset Code. Try Again."
-            return render_template("verify-reset-code.html", user=g.user, errors=errors)
+            return render_template("verify-reset-code.html", user=user, errors=errors)
 
         # mark that the code was verified
-        session["reset_verified_user_id"] = g.user.id
+        session["reset_verified_user_id"] = user.id
         session["reset_verified_at"] = datetime.now(timezone.utc).timestamp()
 
         # clear the reset code data for next time
-        g.user.clear_reset_code()
+        user.clear_reset_code()
         db.session.commit()
-        flash('Reset Code verified successfully!', 'success')
+        flash("Reset Code verified successfully!", "success")
         return redirect(url_for("main.reset_password"))
 
     else:
@@ -347,10 +371,22 @@ def verify_reset_code():
 
 
 @main.route("/reset-password", methods=["GET", "POST"])
-@login_required
 def reset_password():
     """Reset password after accepting a reset code"""
     errors = {}
+
+    # fetch user
+    user_id = session.get("pending_reset_user_id")
+
+    if user_id is None:
+        flash("Something went wrong", "failure")
+        return redirect(url_for("main.login"))
+
+    user = db.session.get(User, user_id)
+
+    if user is None:
+        flash("Something went wrong", "failure")
+        return redirect(url_for("main.login"))
 
     # Don't let people who didn't complete the reset code to enter the page
     verified_id = session.get("reset_verified_user_id")
@@ -359,7 +395,7 @@ def reset_password():
     now = datetime.now(timezone.utc).timestamp()
 
     verified_on_time = (
-        verified_id == g.user.id
+        verified_id == user.id
         and isinstance(verified_at, (int, float))
         and verified_at <= now
         and now - verified_at <= RESET_VERIFY_SECONDS
@@ -367,7 +403,7 @@ def reset_password():
 
     if not verified_on_time:
         flash("Password Reset Failed.", "failure")
-        return redirect(url_for("main.home"))
+        return redirect(url_for("main.login"))
 
     if request.method == "GET":
         return render_template("reset-password.html", errors=errors)
@@ -378,17 +414,24 @@ def reset_password():
             errors["password"] = "Password is too weak."
             return render_template("reset-password.html", errors=errors)
 
-        # Reset the password
-        g.user.set_password(new_password)
-        db.session.commit()
+        # Check password history
+        if in_password_history(user, new_password):
+            errors["password"] = (
+                "You already used this password in the past. "
+                "Please choose a new password."
+            )
+            return render_template("reset-password.html", errors=errors)
 
-        # clear session
+        update_password(user, new_password)
+
+        # Clear password reset session
+        session.pop("pending_reset_user_id", None)
         session.pop("reset_verified_user_id", None)
         session.pop("reset_verified_at", None)
 
-        # signal success
-        flash("Password reset successful", "success")
-        return redirect(url_for("main.home"))
+        # success
+        flash("Password reset successful!", "success")
+        return redirect(url_for("main.login"))
 
     else:
         abort(METHOD_NOT_ALLOWED)

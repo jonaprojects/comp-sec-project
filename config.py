@@ -15,7 +15,8 @@ class Config:
     PASSWORD_REQUIRE_LOWERCASE = True
     PASSWORD_REQUIRE_DIGIT = True
     PASSWORD_REQUIRE_SPECIAL = True
-
+    PASSWORD_HISTORY = 3
+    DICTIONARY_CHECK_ENABLED = True
     @classmethod
     def get_validation_dict(cls) -> dict:
         return {
@@ -24,4 +25,6 @@ class Config:
             "password_require_uppercase": cls.PASSWORD_REQUIRE_UPPERCASE,
             "password_require_digit": cls.PASSWORD_REQUIRE_DIGIT,
             "password_require_special": cls.PASSWORD_REQUIRE_SPECIAL,
+            "password_history": cls.PASSWORD_HISTORY,
+            "dictionary_check_enabled": cls.DICTIONARY_CHECK_ENABLED
         }
