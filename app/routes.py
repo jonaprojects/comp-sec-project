@@ -17,15 +17,20 @@ from werkzeug.exceptions import BadRequestKeyError
 from config import Config
 
 from . import db
-from .models import Client, User, PasswordHistory
+from .models import Client, PasswordHistory, User
 from .utils.email_service import mask_email, send_reset_code
+from .utils.login_limit import (
+    is_login_locked,
+    on_failed_login_attempt,
+    on_successful_login_attempt,
+)
 from .utils.reset_password_service import generate_reset_code, update_password
 from .validators import (
+    in_password_history,
     is_valid_email,
     is_valid_password,
     is_valid_phone,
     is_valid_username,
-    in_password_history,
 )
 
 main = Blueprint("main", __name__)
@@ -147,11 +152,11 @@ def login():
         password = request.form.get("password")
 
         # 1.1 sanity checks
-        if username is None:
+        if not username or username.strip() == '':
             errors["username"] = "Invalid Username. Try Again."
             return render_template("login.html", errors=errors, user=g.user)
 
-        if password is None:
+        if not password or password.strip() == '':
             errors["password"] = "Invalid Password. Try Again."
             return render_template("login.html", errors=errors, user=g.user)
 
@@ -161,17 +166,23 @@ def login():
 
         if user is None:
             # Then the user doesn't exist - cannot log in.
-            errors["username"] = "User does not exist."
+            errors["username"] = "Invalid username."
             return render_template("login.html", errors=errors, user=g.user)
-            # ? Potential risk: do we want to let attackers know which users exist or not?
+
+        # Check if account is locked
+        if is_login_locked(user):
+            errors["password"] = "Account temporarily locked."
+            return render_template("login.html", errors=errors, user=g.user)
 
         # 1.3 Verify that the password is correct (salt, hash and compare)
         if not user.check_password(password):
             errors["password"] = "Incorrect Password!"
-            # TODO: Employ some retry mechanism or counter here, or cooldowns
+            on_failed_login_attempt(user)
             return render_template("login.html", errors=errors, user=g.user)
 
         # 1.4 - Request Authenticated - initiate new session
+        on_successful_login_attempt(user)
+        
         session.clear()
         session["user_id"] = user.id
         return redirect(url_for("main.home"))
@@ -233,7 +244,7 @@ def change_password():
             )
             return render_template("change_password.html", user=g.user, errors=errors)
 
-        # success 
+        # success
         update_password(g.user, new_password)
         flash("Password changed successfully!", "success")
         return redirect(url_for("main.change_password"))
@@ -332,13 +343,13 @@ def verify_reset_code():
 
     if user_id is None:
         flash("Something went wrong", "failure")
-        return render_template("home.html")
+        return redirect(url_for("main.login"))
 
     user = db.session.get(User, user_id)
 
     if user is None:
         flash("Something went wrong", "failure")
-        return render_template("home.html")
+        return redirect(url_for("main.login"))
 
     if request.method == "GET":
         return render_template("verify-reset-code.html", user=user, errors=errors)

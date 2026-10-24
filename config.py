@@ -17,6 +17,8 @@ class Config:
     PASSWORD_REQUIRE_SPECIAL = True
     PASSWORD_HISTORY = 3
     DICTIONARY_CHECK_ENABLED = True
+    FAILED_LOGIN_LIMIT = 3
+    FAILED_LOGIN_TIMEOUT_MINUTES = 5
     @classmethod
     def get_validation_dict(cls) -> dict:
         return {

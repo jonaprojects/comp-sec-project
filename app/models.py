@@ -21,6 +21,10 @@ class User(db.Model):
     reset_code_salt = db.Column(db.String(32), nullable=True)
     reset_expires_at = db.Column(db.DateTime, nullable=True)
 
+    # login limit
+    failed_login_attempts = db.Column(db.Integer, nullable=False, default=0)
+    locked_until = db.Column(db.DateTime(timezone=True), nullable=True, default=None)
+
     def set_password(self, password: str):
 
         # 1. Salt
