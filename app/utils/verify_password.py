@@ -1,8 +1,7 @@
 import hashlib
 import hmac
 
-from ...config import Config
-
+from config import Config
 
 def check_password(password: str, stored_salt: str, stored_hash: str ) -> bool:
     """Check whether a password is correct for that user"""

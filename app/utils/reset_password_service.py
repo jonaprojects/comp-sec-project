@@ -3,7 +3,7 @@ import secrets
 
 from app import db
 
-from ...config import Config
+from config import Config
 from ..models import PasswordHistory
 
 

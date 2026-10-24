@@ -5,8 +5,8 @@ Validate user input according to the project's requirements and best practices.
 import re
 from pathlib import Path
 
-from models import PasswordHistory
-from utils.verify_password import check_password
+from .models import PasswordHistory
+from .utils.verify_password import check_password
 from config import Config
 
 EMAIL_REGEX = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"

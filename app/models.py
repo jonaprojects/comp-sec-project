@@ -5,8 +5,7 @@ from datetime import datetime, timedelta, timezone
 
 from app import db
 from config import Config
-from utils.verify_password import check_password
-
+from .utils.verify_password import check_password
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
