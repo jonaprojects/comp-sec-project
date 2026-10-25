@@ -1,5 +1,7 @@
 from datetime import datetime, timezone
 from functools import wraps
+import secrets
+import hashlib
 
 from flask import (
     Blueprint,
@@ -24,6 +26,7 @@ from .utils.login_limit import (
     on_failed_login_attempt,
     on_successful_login_attempt,
 )
+from .utils.reset_auth import on_reset_code_verified
 from .utils.reset_password_service import generate_reset_code, update_password
 from .validators import (
     in_password_history,
@@ -142,7 +145,8 @@ def register():
 @main.route("/login", methods=["GET", "POST"])
 def login():
     errors = {}
-
+    if g.user is not None: # if we're already logged in, we should be redirected
+        return redirect(url_for('main.home'))
     if request.method == "GET":
         return render_template("login.html", errors=errors, user=g.user)
     elif request.method == "POST":
@@ -189,10 +193,7 @@ def login():
         return abort(METHOD_NOT_ALLOWED)
 
 
-@main.route("/logout", methods=["POST"])
-def logout():
-    session.clear()
-    return redirect(url_for("main.login"))
+
 
 
 def login_required(f):
@@ -205,6 +206,11 @@ def login_required(f):
 
     return decorated
 
+@main.route("/logout", methods=["POST"])
+@login_required
+def logout():
+    session.clear()
+    return redirect(url_for("main.login"))
 
 @main.route("/profile")
 @login_required
@@ -314,10 +320,14 @@ def forgot_password():
         session.pop("pending_reset_user_id", None)
         session.pop("reset_verified_user_id", None)
         session.pop("reset_verified_at", None)
+        session.pop("reset_token", None)
 
         if user is None:
             errors["username"] = "Invalid username."
             return render_template("forgot-password.html", errors=errors)
+
+        # clear previous auth tokens
+        user.reset_token_hash = None
 
         reset_code = generate_reset_code()
 
@@ -366,16 +376,12 @@ def verify_reset_code():
             errors["message"] = "Incorrect Reset Code. Try Again."
             return render_template("verify-reset-code.html", user=user, errors=errors)
 
-        # mark that the code was verified
-        session["reset_verified_user_id"] = user.id
-        session["reset_verified_at"] = datetime.now(timezone.utc).timestamp()
+        # success 
+        on_reset_code_verified(user)
 
-        # clear the reset code data for next time
-        user.clear_reset_code()
-        db.session.commit()
         flash("Reset Code verified successfully!", "success")
-        return redirect(url_for("main.reset_password"))
-
+        return redirect(url_for("main.reset_password")) 
+    
     else:
         abort(METHOD_NOT_ALLOWED)
 
@@ -411,7 +417,17 @@ def reset_password():
         and now - verified_at <= RESET_VERIFY_SECONDS
     )
 
-    if not verified_on_time:
+    token = session.get("reset_token")
+
+    token_valid = (
+        isinstance(token, str)
+        and user.reset_token_hash is not None
+        and secrets.compare_digest(
+            hashlib.sha256(token.encode("utf-8")).hexdigest(),
+            user.reset_token_hash
+        )
+    )
+    if not verified_on_time or not token_valid:
         flash("Password Reset Failed.", "failure")
         return redirect(url_for("main.login"))
 
@@ -438,7 +454,10 @@ def reset_password():
         session.pop("pending_reset_user_id", None)
         session.pop("reset_verified_user_id", None)
         session.pop("reset_verified_at", None)
-
+        session.pop("reset_token", None)
+        user.reset_token_hash = None
+        db.session.commit()
+        
         # success
         flash("Password reset successful!", "success")
         return redirect(url_for("main.login"))
