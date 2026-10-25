@@ -124,8 +124,7 @@ def register():
             db.session.add(new_user)
             db.session.commit()
 
-            # TODO: But here we need to add user data and a session
-            return redirect(url_for("main.home"))
+            return redirect(url_for("main.login"))
 
         except BadRequestKeyError:
             # Would be thrown if one or more properties don't exist.
