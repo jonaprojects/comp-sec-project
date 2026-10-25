@@ -150,6 +150,27 @@ If something is invalid they get the login.html page back with an error message.
 5. If everything was successful, a new session with the user id is established, and the login failed attempts data is cleaned. The user is redirected to the home page.
 Also, a new user is created and added to the database, and the password is hashed and salted.
 
+## Logout
+*This page is only available if the user is already logged in.*
+
+The logout functionality is surprisingly simple. We remember users who are logged in using an agreed session.
+
+When the user logs in, the server sends a session with the user id. From this point on, the user adds this `user_id` session in every request they send, and that's how the server knows how to distinguish between logged-in and not logged-in users: the existence and validity of the session.
+
+So all that we have to do to log users out, is to instruct the specific user's browser to delete the session that was attached to that request.
+
+Here's a basic implementation of the logout functionality in our server:
+
+```python
+@main.route("/logout", methods=["POST"])
+def logout():
+    session.clear()
+    return redirect(url_for("main.login"))
+```
+
+We use POST instead of GET here since GET requests should be mainly for read-only operations - that is, for fetching data.
+
+
 ## Change Password
 *This page is only available if the user is already logged in.*
 
@@ -237,7 +258,7 @@ user.clear_reset_code()
 
 The main vulnerabilities we tackle in this project are SQL Injections and stored XSS attacks.
 
-### SQL Injections
+## SQL Injections
 
 An SQL Injection is a known vulnerability where a malicious actor manages to get an SQL instruction on our server. Depending on the severity it could lead to data leaks and data loss, so we have to use certain mechanisms to stop it. 
 
@@ -297,4 +318,41 @@ query = db.select(User.id).where(User.username == username)
 existing_user_id = db.session.scalar(query)
 ```
 
-### Stored XSS
+## Stored XSS
+
+### What is stored XSS?
+Stored XSS is a type of a vulnerability where a malicious actor manages to save Javascript or HTML code in our database (or any other storage).
+Then if this data is displayed for other users, this code could run on their machines as well.
+
+For instance, let's look at the register form where a user needs to fill out his username.
+
+A potential attacker could enter something like 
+
+```python
+<script>alert("stored xss")</script>
+```
+
+If another user views his name, then this Javascript code would be loaded into his browser and executed.
+
+In other words, the attacker uses the server to store malicious code, and to deliver this code to other users. 
+
+
+### How do we prevent it?
+One of the main approaches to prevent XSS attacks is escaping. Escaping is the process of replacing special characters with their HTML codes. That way, when the browser loads the content, it knows only to display it, and not to execute it. 
+For instance, we replace `<` with `&lt;`.
+
+Coming back to the previous example, the escaped version would be 
+
+```python
+&lt;script&gt;alert(&#34;Stored XSS!&#34;)&lt;/script&gt;
+```
+
+Flask escapes content automatically before it sends it to the browser. So when we display content like this inside an HTML file:
+
+```html
+<p>
+{{ username }}
+</p>
+```
+
+It would be rendered safely.
