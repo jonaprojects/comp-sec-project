@@ -142,13 +142,49 @@ The login process can be divided to the following consecutive steps:
 
 1. User sends an HTTP GET request to `/login`, and receives an HTTP Get Response with `login.html`. If the  user is already logged in, they are redirected to the home page.
 
-3. The user fills out the username and password and submits the form. An HTTP POST Request is sent to the server at `/register`.
+3. The user fills out the username and password and submits the form. An HTTP POST Request is sent to the server at `/login`.
 
 4. The server validates the user details, and verifies such user exists and that they don't exceed the login failed attempts limit.
 If something is invalid they get the login.html page back with an error message.
 
 5. If everything was successful, a new session with the user id is established, and the login failed attempts data is cleaned. The user is redirected to the home page.
 Also, a new user is created and added to the database, and the password is hashed and salted.
+
+
+## Logged-in Guard
+
+Some pages, like the profile page or changing a password, should only 
+be available for logged-in users. 
+To enforce that, I created a dedicated decorator (a python structure that modifies a function with an additional functionality).
+
+```python
+def login_required(f):
+    @wraps(f)  # to not lose the original function attributes
+    def decorated(*args, **kwargs):
+        if g.user is None:
+            return redirect(url_for("main.login"))
+
+        return f(*args, **kwargs)
+
+    return decorated
+```
+
+Here we check if `g.user` is None to check if a user is logged in.
+The `g` object in flask represent a global variable that is request specific.
+Why is that working? it works since before each request, we fetch the relevant user making that request and save it in `g.user`. If the user is not logged in, `g.user` would be `None`.
+
+```python
+@main.before_request
+def load_logged_in_user():
+    user_id = session.get("user_id")
+
+    if user_id is None:
+        g.user = None
+    else:
+        g.user = db.session.get(User, user_id)
+        if g.user is None:
+            session.clear()
+```
 
 ## Logout
 *This page is only available if the user is already logged in.*
@@ -169,6 +205,13 @@ def logout():
 ```
 
 We use POST instead of GET here since GET requests should be mainly for read-only operations - that is, for fetching data.
+
+For instance, we prevent other websites from embeding our endpoints in their pages and tricking users to log out of their accounts:
+
+```python
+<img src="127.0.0.1/logout">
+```
+(currently we're on local host but the example stands)
 
 
 ## Change Password
